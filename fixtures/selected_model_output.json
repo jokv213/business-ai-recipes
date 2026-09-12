@@ -1,0 +1,40 @@
+{
+  "fixture_metadata": {
+    "fixture_id": "synthetic-luna-launch-20260910-selected-output",
+    "fixture_kind": "selected_model_output_fixture",
+    "selected": true,
+    "label": "SYNTHETIC_ONLY_NOT_PRODUCTION",
+    "model": "gpt-5.6-luna / max",
+    "captured_on": "2026-09-10",
+    "source_is_synthetic": true,
+    "is_production_data": false,
+    "is_production_result": false,
+    "live_api_call": false
+  },
+  "proposal": {
+    "tasks": [
+      {
+        "title": "CSV月次レポートの集計仕様を整理",
+        "owner": "担当B",
+        "due": "2026-09-18",
+        "evidence": [
+          {
+            "line_id": "L2",
+            "quote": "担当B: 2026-09-18までにCSV月次レポートの集計仕様を整理します。"
+          }
+        ]
+      },
+      {
+        "title": "FAQの重複項目を確認",
+        "owner": null,
+        "due": null,
+        "evidence": [
+          {
+            "line_id": "L3",
+            "quote": "FAQの重複項目を確認する必要があります。担当と期限は未定です。"
+          }
+        ]
+      }
+    ]
+  }
+}
