@@ -76,6 +76,9 @@ result = apply_local(plan, approval, "tasks.sqlite3", human_review=human_review)
 ## 同梱ファイル
 
 ```text
+.github/workflows/verify.yml
+.gitignore
+AGENTS.md
 README.md
 LICENSE
 recipe.py
