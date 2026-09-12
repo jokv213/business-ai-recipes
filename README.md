@@ -1,8 +1,10 @@
-# Business AI Recipes #1: Evidence-First Meeting Tasks
+# Business AI Recipes
 
 [![Verify](https://github.com/jokv213/business-ai-recipes/actions/workflows/verify.yml/badge.svg)](https://github.com/jokv213/business-ai-recipes/actions/workflows/verify.yml)
 
 作者: **Naoya / jokv213**
+
+## Recipe #1: Evidence-First Meeting Tasks
 
 議事録から出典付きタスク案を作り、人が確認した根拠行だけをローカルの模擬タスクDBへ重複なく登録する、最小の実行例です。標準ライブラリだけで動き、実行時にモデル、外部リポジトリ、タスク管理サービス、ネットワークへアクセスしません。
 
@@ -72,6 +74,19 @@ result = apply_local(plan, approval, "tasks.sqlite3", human_review=human_review)
 
 この境界は一般的なprompt injectionを完全には防止しません。コードは引用、見送り、否定、未決定などの意味を自動判定せず、確認済み行に含まれる指示的な文章も検知しきれません。人による行の選定と、ローカル模擬の最終承認を省略しないでください。
 
+## Recipe #2: CSV-to-Checked-Report
+
+合成CSVの行数・欠損・不正値・重複ID・合計を決定的に集計し、説明文内の数値が計算結果と一致するか検算します。実行時にAIや外部APIは呼びません。集計ルールと失敗例は[recipe README](recipes/csv-to-report/README.md)を参照してください。
+
+リポジトリ直下から実行します。
+
+```bash
+python3 -B recipes/csv-to-report/report.py \
+  --csv recipes/csv-to-report/sales.csv
+```
+
+合成入力は4行で、金額有効3行・欠損1件・合計4,500円です。欠損があるため `REVIEW_REQUIRED` となり、利用前に元CSVを人が確認します。空入力、重複、欠損と不正文字列の組み合わせも同じ公開検証で確認します。
+
 ## 同梱ファイル
 
 ```text
@@ -86,6 +101,12 @@ verify.py
 fixtures/synthetic_meeting.json
 fixtures/selected_model_output.json
 fixtures/human_review.json
+recipes/csv-to-report/README.md
+recipes/csv-to-report/report.py
+recipes/csv-to-report/sales.csv
+recipes/csv-to-report/examples/empty.csv
+recipes/csv-to-report/examples/duplicate.csv
+recipes/csv-to-report/examples/mixed-strings.csv
 ```
 
 コードと合成fixtureは MIT License で公開しています。

@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import importlib.util
+import json
+import os
+import subprocess
 import sys
 from copy import deepcopy
 from pathlib import Path
@@ -21,6 +25,12 @@ EXPECTED_FILES = {
     "fixtures/synthetic_meeting.json",
     "fixtures/selected_model_output.json",
     "fixtures/human_review.json",
+    "recipes/csv-to-report/README.md",
+    "recipes/csv-to-report/report.py",
+    "recipes/csv-to-report/sales.csv",
+    "recipes/csv-to-report/examples/empty.csv",
+    "recipes/csv-to-report/examples/duplicate.csv",
+    "recipes/csv-to-report/examples/mixed-strings.csv",
 }
 _MISSING = object()
 
@@ -68,6 +78,127 @@ def _must_refuse(action) -> None:
     raise AssertionError("invalid input was accepted")
 
 
+def _load_csv_recipe(root: Path):
+    path = root / "recipes" / "csv-to-report" / "report.py"
+    spec = importlib.util.spec_from_file_location("public_csv_to_report", path)
+    if spec is None or spec.loader is None:
+        raise AssertionError("public CSV recipe could not be loaded")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _verify_csv_report(root: Path) -> dict:
+    recipe = _load_csv_recipe(root)
+    csv_root = root / "recipes" / "csv-to-report"
+    sales_text = (csv_root / "sales.csv").read_text(encoding="utf-8")
+    report = recipe.build_report(sales_text)
+    expected_sales = {
+        "status": "REVIEW_REQUIRED",
+        "source_rows": 4,
+        "valid_amount_rows": 3,
+        "missing_amount_rows": 1,
+        "invalid_amount_rows": 0,
+        "duplicate_record_rows": 0,
+        "total_amount_yen": 4500,
+    }
+    if report["metrics"] != expected_sales or report["narrative_verified"] is not True:
+        raise AssertionError("CSV sample metrics or narrative do not reconcile")
+
+    cases = {
+        "empty.csv": {
+            "status": "EMPTY_INPUT",
+            "source_rows": 0,
+            "valid_amount_rows": 0,
+            "missing_amount_rows": 0,
+            "invalid_amount_rows": 0,
+            "duplicate_record_rows": 0,
+            "total_amount_yen": 0,
+        },
+        "duplicate.csv": {
+            "status": "REVIEW_REQUIRED",
+            "source_rows": 2,
+            "valid_amount_rows": 2,
+            "missing_amount_rows": 0,
+            "invalid_amount_rows": 0,
+            "duplicate_record_rows": 1,
+            "total_amount_yen": 2400,
+        },
+        "mixed-strings.csv": {
+            "status": "REVIEW_REQUIRED",
+            "source_rows": 3,
+            "valid_amount_rows": 1,
+            "missing_amount_rows": 1,
+            "invalid_amount_rows": 1,
+            "duplicate_record_rows": 0,
+            "total_amount_yen": 1200,
+        },
+    }
+    for name, expected in cases.items():
+        actual = recipe.build_report((csv_root / "examples" / name).read_text(encoding="utf-8"))
+        if actual["metrics"] != expected or actual["narrative_verified"] is not True:
+            raise AssertionError(f"CSV edge case does not reconcile: {name}")
+
+    invalid_csv_inputs = (
+        "record_id,amount_yen\nX001,1200\n",
+        "record_id,department,amount_yen\n,営業,1200\n",
+        "record_id,department,amount_yen\nX001,営業,1200,unexpected\n",
+        'record_id,department,amount_yen\nX001,"営業,1200\n',
+    )
+    for csv_text in invalid_csv_inputs:
+        try:
+            recipe.analyze_csv_text(csv_text)
+        except recipe.CSVReportError:
+            continue
+        raise AssertionError("invalid CSV input was accepted")
+
+    changed_narrative = report["narrative"].replace("4,500円", "4,501円")
+    if changed_narrative == report["narrative"]:
+        raise AssertionError("CSV narrative regression probe did not change its total")
+    try:
+        recipe.build_report(sales_text, narrative=changed_narrative)
+    except recipe.NarrativeMismatch:
+        pass
+    else:
+        raise AssertionError("incorrect narrative total was accepted")
+
+    environment = os.environ.copy()
+    environment.pop("PYTHONPATH", None)
+    environment.pop("PYTHONHOME", None)
+    environment["PYTHONDONTWRITEBYTECODE"] = "1"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            "recipes/csv-to-report/report.py",
+            "--csv",
+            "recipes/csv-to-report/sales.csv",
+        ],
+        cwd=root,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+    if completed.returncode:
+        raise AssertionError(f"CSV README command failed: {completed.stderr}")
+    cli_result = json.loads(completed.stdout)
+    if (
+        cli_result.get("metrics") != expected_sales
+        or cli_result.get("narrative_verified") is not True
+    ):
+        raise AssertionError("CSV README command output did not reconcile")
+    return {
+        "source_rows": expected_sales["source_rows"],
+        "missing_amount_rows": expected_sales["missing_amount_rows"],
+        "total_amount_yen": expected_sales["total_amount_yen"],
+        "edge_cases": len(cases),
+        "invalid_inputs_rejected": len(invalid_csv_inputs),
+        "narrative_mismatch_rejected": True,
+    }
+
+
 def verify(
     root: Path | None = None,
     *,
@@ -77,6 +208,7 @@ def verify(
 ) -> dict:
     root = (root or Path(__file__).resolve().parent).resolve()
     _assert_candidate_boundary(root)
+    csv_summary = _verify_csv_report(root)
 
     supplied_inputs = (
         transcript is not _MISSING,
@@ -91,6 +223,7 @@ def verify(
         return {
             "files": len(EXPECTED_FILES),
             "prepared_tasks": len(plan["tasks"]),
+            "csv_report": csv_summary,
             "external_write": False,
         }
 
@@ -179,6 +312,7 @@ def verify(
         "files": len(EXPECTED_FILES),
         "deterministic_prepare": True,
         "reviewed_action_line_ids": sorted(reviewed_line_ids),
+        "csv_report": csv_summary,
         "first_inserted": first["inserted"],
         "repeat_inserted": repeat["inserted"],
         "stored": repeat["total_stored"],
@@ -192,9 +326,10 @@ def main() -> int:
     except (AssertionError, OSError, ValueError) as exc:
         print(f"VERIFY_FAILED: {exc}", file=sys.stderr)
         return 1
-    print("PASS: candidate boundary and synthetic fixture labels")
+    print(f"PASS: candidate boundary and synthetic fixture labels; files={result['files']}")
     print("PASS: separate human-reviewed evidence boundary")
     print("PASS: deterministic prepare and schema validation")
+    print("PASS: CSV README command, edge cases, and narrative reconciliation")
     print(
         "PASS: first_run.inserted={first_inserted}; "
         "repeat_run.inserted={repeat_inserted}; "
