@@ -21,12 +21,11 @@ AIが議事録中の「見送り」「未決定」「第三者メールの引用
 
 ## 実行方法
 
-必要なのは Python 3.11 以上です。追加のPythonパッケージはありません。
+必要なのは Python 3.11 以上です。追加のPythonパッケージはありません。cloneまたはZIP展開後、このREADMEと `recipe.py` があるリポジトリ直下で実行します。
 
 ```bash
-cd public-package
-python3 run_demo.py
-python3 verify.py
+python3 -B run_demo.py
+python3 -B verify.py
 ```
 
 両CLIは同梱の合成fixtureだけを使い、任意のモデル出力やレビュー入力を受け取りません。`run_demo.py` は一時ディレクトリ内のSQLite DBへ模擬登録して、実行後にDBを削除します。`verify.py` は同じ入力契約の拒否条件も検査します。別の一時ディレクトリへこのフォルダだけをコピーして再現できます。
