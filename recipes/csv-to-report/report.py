@@ -13,6 +13,7 @@ from pathlib import Path
 REQUIRED_COLUMNS = ("record_id", "department", "amount_yen")
 STATUS_VALUES = {"EMPTY_INPUT", "OK", "REVIEW_REQUIRED"}
 INTEGER_PATTERN = re.compile(r"[0-9]+\Z")
+REVIEW_FLAG_ORDER = ("missing_amount", "invalid_amount", "duplicate_record_id")
 
 
 class CSVReportError(ValueError):
@@ -46,23 +47,27 @@ def _calculate_status(metrics: dict[str, int | str]) -> str:
     return "OK" if not any(quality_flags) else "REVIEW_REQUIRED"
 
 
-def analyze_csv_text(csv_text: str) -> dict[str, int | str]:
-    """Calculate reconciliation metrics from a CSV string.
+def _analyze_csv_text_with_findings(
+    csv_text: str,
+) -> tuple[dict[str, int | str], list[dict[str, object]]]:
+    """Calculate reconciliation metrics and value-free findings from CSV text.
 
     ``amount_yen`` accepts non-negative integer text. Blank values are missing;
     non-blank values that are not integers are invalid and are excluded from the
     total. Repeated ``record_id`` rows remain in the source total and are flagged
-    instead of being silently deduplicated.
+    instead of being silently deduplicated. ``data_row`` numbers the logical
+    records yielded after the header, not physical source lines.
     """
 
     if not isinstance(csv_text, str):
         raise CSVReportError("CSV input must be text")
 
+    findings: list[dict[str, object]] = []
     try:
         reader = csv.DictReader(io.StringIO(csv_text, newline=""), strict=True)
         fieldnames = reader.fieldnames
         if fieldnames is None:
-            return _empty_metrics()
+            return _empty_metrics(), findings
         if len(fieldnames) != len(set(fieldnames)):
             raise CSVReportError("CSV header contains duplicate columns")
         missing_columns = set(REQUIRED_COLUMNS) - set(fieldnames)
@@ -72,10 +77,11 @@ def analyze_csv_text(csv_text: str) -> dict[str, int | str]:
 
         metrics = _empty_metrics()
         seen_ids: set[str] = set()
-        for row in reader:
+        for data_row, row in enumerate(reader, start=1):
             if None in row:
                 raise CSVReportError("CSV row has more values than its header")
             metrics["source_rows"] += 1
+            row_flags: set[str] = set()
 
             record_id = row.get("record_id")
             if not isinstance(record_id, str) or not record_id.strip():
@@ -83,28 +89,47 @@ def analyze_csv_text(csv_text: str) -> dict[str, int | str]:
             record_id = record_id.strip()
             if record_id in seen_ids:
                 metrics["duplicate_record_rows"] += 1
+                row_flags.add("duplicate_record_id")
             else:
                 seen_ids.add(record_id)
 
             raw_amount = row.get("amount_yen")
             if raw_amount is None or not raw_amount.strip():
                 metrics["missing_amount_rows"] += 1
-                continue
-            amount_text = raw_amount.strip()
-            if not INTEGER_PATTERN.fullmatch(amount_text):
-                metrics["invalid_amount_rows"] += 1
-                continue
-            try:
-                amount = int(amount_text)
-            except ValueError:
-                metrics["invalid_amount_rows"] += 1
-                continue
-            metrics["valid_amount_rows"] += 1
-            metrics["total_amount_yen"] += amount
+                row_flags.add("missing_amount")
+            else:
+                amount_text = raw_amount.strip()
+                if not INTEGER_PATTERN.fullmatch(amount_text):
+                    metrics["invalid_amount_rows"] += 1
+                    row_flags.add("invalid_amount")
+                else:
+                    try:
+                        amount = int(amount_text)
+                    except ValueError:
+                        metrics["invalid_amount_rows"] += 1
+                        row_flags.add("invalid_amount")
+                    else:
+                        metrics["valid_amount_rows"] += 1
+                        metrics["total_amount_yen"] += amount
+
+            if row_flags:
+                findings.append(
+                    {
+                        "data_row": data_row,
+                        "flags": [flag for flag in REVIEW_FLAG_ORDER if flag in row_flags],
+                    }
+                )
     except csv.Error as exc:
         raise CSVReportError(f"CSV parsing failed: {exc}") from exc
 
     metrics["status"] = _calculate_status(metrics)
+    return metrics, findings
+
+
+def analyze_csv_text(csv_text: str) -> dict[str, int | str]:
+    """Calculate reconciliation metrics from a CSV string."""
+
+    metrics, _ = _analyze_csv_text_with_findings(csv_text)
     return metrics
 
 
@@ -189,13 +214,14 @@ def verify_narrative(narrative: str, metrics: dict[str, int | str]) -> bool:
 def build_report(csv_text: str, narrative: str | None = None) -> dict[str, object]:
     """Build a report and reject prose until its numbers reconcile."""
 
-    metrics = analyze_csv_text(csv_text)
+    metrics, review_findings = _analyze_csv_text_with_findings(csv_text)
     report_text = render_narrative(metrics) if narrative is None else narrative
     verify_narrative(report_text, metrics)
     return {
         "metrics": metrics,
         "narrative": report_text,
         "narrative_verified": True,
+        "review_findings": review_findings,
     }
 
 
