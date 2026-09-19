@@ -87,6 +87,14 @@ python3 -B recipes/csv-to-report/report.py \
 
 合成入力は4行で、金額有効3行・欠損1件・合計4,500円です。欠損があるため `REVIEW_REQUIRED` となり、利用前に元CSVを人が確認します。空入力、重複、欠損と不正文字列の組み合わせも同じ公開検証で確認します。
 
+## Recipe #3: Jev Support Triage
+
+日本語中心の合成問い合わせ16件を、記録済みfixtureに固定したTypeSafe Jev `jev-1.13.0` のChoice応答から担当候補または `review` へ再分類するrecipeです。オフライン経路はキー不要・ネットワーク不要で、実測回答を無意味に再送しません。詳細は[recipe README](recipes/jev-support-triage/README.md)を参照してください。
+
+事前ラベルは明確な11件（単一担当10件、対象外1件）とレビュー対象5件です。2026-09-19 14:00 JSTの記録済み実測は16件すべてHTTP 200、単一担当10件の一致10・誤自動判定0、対象外1件とレビュー対象5件をレビュー送りでした。これは合成小標本の観測値であり、一般的な日本語精度・確率校正・実運用成果・誘導文耐性を示しません。
+
+暫定ゲートは選択確率 `0.85` 以上かつconfidence `0.65` 以上、`other` は常にレビューです。`python3 -B recipes/jev-support-triage/triage.py --offline` で `network_calls=0` と `external_write=false` を確認できます。任意の `--live` は同梱合成fixtureだけを、環境変数 `TYPESAFE_API_KEY` でTypeSafe直通へ送る経路ですが、この公開候補・CI・通常手順では実行していません。返信や外部writeは行いません。
+
 ## 同梱ファイル
 
 ```text
@@ -107,6 +115,10 @@ recipes/csv-to-report/sales.csv
 recipes/csv-to-report/examples/empty.csv
 recipes/csv-to-report/examples/duplicate.csv
 recipes/csv-to-report/examples/mixed-strings.csv
+recipes/jev-support-triage/README.md
+recipes/jev-support-triage/cases.json
+recipes/jev-support-triage/observed-answers.json
+recipes/jev-support-triage/triage.py
 ```
 
 コードと合成fixtureは MIT License で公開しています。

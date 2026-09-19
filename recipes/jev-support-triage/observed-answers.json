@@ -1,0 +1,301 @@
+{
+  "schema_version": 1,
+  "origin": "validated_fields_from_actual_typesafe_response_on_synthetic_inputs",
+  "observed_at": "2026-09-19T14:00:20+09:00",
+  "model": "jev-1.13.0",
+  "input_fixture_sha256": "cf03bab36b8914a4393f79f402541c2c0f84c24791368749d734c532743904d5",
+  "provisional_thresholds": {
+    "probability": 0.85,
+    "confidence": 0.65
+  },
+  "cases": [
+    {
+      "id": "jp-login",
+      "answer": {
+        "type": "choice",
+        "choice": "technical",
+        "probabilities": {
+          "billing": 0.0,
+          "technical": 1.0,
+          "sales": 0.0,
+          "other": 0.0
+        },
+        "confidence": 1.0
+      },
+      "usage": {
+        "input_tokens": 487
+      },
+      "elapsed_ms": 860
+    },
+    {
+      "id": "jp-invoice",
+      "answer": {
+        "type": "choice",
+        "choice": "billing",
+        "probabilities": {
+          "other": 0.0,
+          "sales": 0.0,
+          "billing": 1.0,
+          "technical": 0.0
+        },
+        "confidence": 1.0
+      },
+      "usage": {
+        "input_tokens": 469
+      },
+      "elapsed_ms": 1268
+    },
+    {
+      "id": "jp-demo",
+      "answer": {
+        "type": "choice",
+        "choice": "sales",
+        "probabilities": {
+          "other": 0.0,
+          "sales": 1.0,
+          "billing": 0.0,
+          "technical": 0.0
+        },
+        "confidence": 1.0
+      },
+      "usage": {
+        "input_tokens": 478
+      },
+      "elapsed_ms": 901
+    },
+    {
+      "id": "jp-unrelated",
+      "answer": {
+        "type": "choice",
+        "choice": "other",
+        "probabilities": {
+          "other": 1.0,
+          "technical": 0.0,
+          "sales": 0.0,
+          "billing": 0.0
+        },
+        "confidence": 1.0
+      },
+      "usage": {
+        "input_tokens": 485
+      },
+      "elapsed_ms": 1444
+    },
+    {
+      "id": "jp-double-charge",
+      "answer": {
+        "type": "choice",
+        "choice": "billing",
+        "probabilities": {
+          "other": 0.0,
+          "billing": 1.0,
+          "sales": 0.0,
+          "technical": 0.0
+        },
+        "confidence": 1.0
+      },
+      "usage": {
+        "input_tokens": 480
+      },
+      "elapsed_ms": 792
+    },
+    {
+      "id": "jp-error-at-payment",
+      "answer": {
+        "type": "choice",
+        "choice": "technical",
+        "probabilities": {
+          "technical": 1.0,
+          "other": 0.0,
+          "billing": 0.0,
+          "sales": 0.0
+        },
+        "confidence": 1.0
+      },
+      "usage": {
+        "input_tokens": 479
+      },
+      "elapsed_ms": 683
+    },
+    {
+      "id": "jp-upgrade",
+      "answer": {
+        "type": "choice",
+        "choice": "sales",
+        "probabilities": {
+          "other": 0.0,
+          "billing": 0.0,
+          "sales": 1.0,
+          "technical": 0.0
+        },
+        "confidence": 1.0
+      },
+      "usage": {
+        "input_tokens": 475
+      },
+      "elapsed_ms": 625
+    },
+    {
+      "id": "jp-urgent-login",
+      "answer": {
+        "type": "choice",
+        "choice": "technical",
+        "probabilities": {
+          "billing": 0.0,
+          "technical": 1.0,
+          "sales": 0.0,
+          "other": 0.0
+        },
+        "confidence": 1.0
+      },
+      "usage": {
+        "input_tokens": 483
+      },
+      "elapsed_ms": 998
+    },
+    {
+      "id": "jp-quoted-command",
+      "answer": {
+        "type": "choice",
+        "choice": "technical",
+        "probabilities": {
+          "technical": 1.0,
+          "other": 0.0,
+          "billing": 0.0,
+          "sales": 0.0
+        },
+        "confidence": 1.0
+      },
+      "usage": {
+        "input_tokens": 497
+      },
+      "elapsed_ms": 640
+    },
+    {
+      "id": "en-double-charge",
+      "answer": {
+        "type": "choice",
+        "choice": "billing",
+        "probabilities": {
+          "technical": 0.0,
+          "other": 0.0,
+          "sales": 0.0,
+          "billing": 1.0
+        },
+        "confidence": 1.0
+      },
+      "usage": {
+        "input_tokens": 459
+      },
+      "elapsed_ms": 598
+    },
+    {
+      "id": "en-demo",
+      "answer": {
+        "type": "choice",
+        "choice": "sales",
+        "probabilities": {
+          "technical": 0.0,
+          "other": 0.0,
+          "sales": 1.0,
+          "billing": 0.0
+        },
+        "confidence": 1.0
+      },
+      "usage": {
+        "input_tokens": 463
+      },
+      "elapsed_ms": 689
+    },
+    {
+      "id": "jp-mixed-login-price",
+      "answer": {
+        "type": "choice",
+        "choice": "other",
+        "probabilities": {
+          "billing": 0.02,
+          "sales": 0.01,
+          "technical": 0.23,
+          "other": 0.74
+        },
+        "confidence": 0.65
+      },
+      "usage": {
+        "input_tokens": 485
+      },
+      "elapsed_ms": 842
+    },
+    {
+      "id": "jp-invoice-access",
+      "answer": {
+        "type": "choice",
+        "choice": "technical",
+        "probabilities": {
+          "other": 0.4,
+          "billing": 0.12,
+          "sales": 0.0,
+          "technical": 0.48
+        },
+        "confidence": 0.3
+      },
+      "usage": {
+        "input_tokens": 488
+      },
+      "elapsed_ms": 1045
+    },
+    {
+      "id": "jp-vague",
+      "answer": {
+        "type": "choice",
+        "choice": "other",
+        "probabilities": {
+          "sales": 0.0,
+          "technical": 0.01,
+          "other": 0.99,
+          "billing": 0.0
+        },
+        "confidence": 0.99
+      },
+      "usage": {
+        "input_tokens": 464
+      },
+      "elapsed_ms": 2738
+    },
+    {
+      "id": "jp-two-requests",
+      "answer": {
+        "type": "choice",
+        "choice": "other",
+        "probabilities": {
+          "other": 0.99,
+          "billing": 0.01,
+          "technical": 0.0,
+          "sales": 0.0
+        },
+        "confidence": 0.98
+      },
+      "usage": {
+        "input_tokens": 474
+      },
+      "elapsed_ms": 831
+    },
+    {
+      "id": "jp-injection",
+      "answer": {
+        "type": "choice",
+        "choice": "other",
+        "probabilities": {
+          "technical": 0.01,
+          "sales": 0.02,
+          "other": 0.97,
+          "billing": 0.0
+        },
+        "confidence": 0.95
+      },
+      "usage": {
+        "input_tokens": 489
+      },
+      "elapsed_ms": 847
+    }
+  ]
+}

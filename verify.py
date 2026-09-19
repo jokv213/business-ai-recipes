@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import os
@@ -31,6 +32,10 @@ EXPECTED_FILES = {
     "recipes/csv-to-report/examples/empty.csv",
     "recipes/csv-to-report/examples/duplicate.csv",
     "recipes/csv-to-report/examples/mixed-strings.csv",
+    "recipes/jev-support-triage/README.md",
+    "recipes/jev-support-triage/cases.json",
+    "recipes/jev-support-triage/observed-answers.json",
+    "recipes/jev-support-triage/triage.py",
 }
 _MISSING = object()
 
@@ -73,7 +78,7 @@ def _assert_candidate_boundary(root: Path) -> None:
 def _must_refuse(action) -> None:
     try:
         action()
-    except Refused:
+    except ValueError:
         return
     raise AssertionError("invalid input was accepted")
 
@@ -83,6 +88,16 @@ def _load_csv_recipe(root: Path):
     spec = importlib.util.spec_from_file_location("public_csv_to_report", path)
     if spec is None or spec.loader is None:
         raise AssertionError("public CSV recipe could not be loaded")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_jev_recipe(root: Path):
+    path = root / "recipes" / "jev-support-triage" / "triage.py"
+    spec = importlib.util.spec_from_file_location("public_jev_support_triage", path)
+    if spec is None or spec.loader is None:
+        raise AssertionError("public Jev recipe could not be loaded")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -199,6 +214,111 @@ def _verify_csv_report(root: Path) -> dict:
     }
 
 
+def _verify_jev_recipe(root: Path) -> dict:
+    recipe = _load_jev_recipe(root)
+    recipe_root = root / "recipes" / "jev-support-triage"
+    cases_path = recipe_root / "cases.json"
+    recorded_path = recipe_root / "observed-answers.json"
+    cases = recipe.load_cases(cases_path)
+    report = recipe.reproduce(cases_path, recorded_path)
+    expected_summary = {
+        "cases": 16,
+        "clear_cases": 11,
+        "routable_clear_cases": 10,
+        "routable_correct_auto": 10,
+        "routable_wrong_auto": 0,
+        "routable_reviewed": 0,
+        "clear_other_cases": 1,
+        "clear_other_reviewed": 1,
+        "review_cases": 5,
+        "review_gated": 5,
+        "review_missed": 0,
+        "input_tokens": 7655,
+        "latency_ms_median": 844.5,
+        "latency_ms_max": 2738,
+    }
+    if report["summary"] != expected_summary:
+        raise AssertionError(f"Jev recorded summary changed: {report['summary']}")
+    if (
+        report["fixture_status"] != "SYNTHETIC_ONLY_NOT_PRODUCTION"
+        or report["recorded_response_status"] != "recorded_fixture_not_live_call"
+        or report["model"] != "jev-1.13.0"
+        or report["input_fixture_sha256"]
+        != "cf03bab36b8914a4393f79f402541c2c0f84c24791368749d734c532743904d5"
+        or report["recorded_fixture_sha256"]
+        != hashlib.sha256(recorded_path.read_bytes()).hexdigest()
+        or report["provisional_thresholds"] != {"probability": 0.85, "confidence": 0.65}
+        or report["offline"] is not True
+        or report["network_calls"] != 0
+        or report["external_write"] is not False
+    ):
+        raise AssertionError("Jev offline boundary or fixture metadata changed")
+
+    rows_by_id = {row["id"]: row for row in report["cases"]}
+    expected_review_ids = {
+        "jp-unrelated",
+        "jp-mixed-login-price",
+        "jp-invoice-access",
+        "jp-vague",
+        "jp-two-requests",
+        "jp-injection",
+    }
+    if {case["id"] for case in cases} != set(rows_by_id):
+        raise AssertionError("Jev case IDs do not reconcile")
+    if any(rows_by_id[case_id]["action"] != "review" for case_id in expected_review_ids):
+        raise AssertionError("Jev review cases were automatically routed")
+
+    changed = json.loads(recorded_path.read_text(encoding="utf-8"))
+    changed["cases"][0]["answer"]["choice"] = "billing"
+    with TemporaryDirectory(prefix="jev-triage-invalid-") as directory:
+        invalid = Path(directory) / "observed-answers.json"
+        invalid.write_text(json.dumps(changed), encoding="utf-8")
+        _must_refuse(lambda: recipe.reproduce(cases_path, invalid))
+
+    environment = os.environ.copy()
+    environment.pop("PYTHONPATH", None)
+    environment.pop("PYTHONHOME", None)
+    environment.pop("TYPESAFE_API_KEY", None)
+    environment["PYTHONDONTWRITEBYTECODE"] = "1"
+    offline = subprocess.run(
+        [sys.executable, "-B", "recipes/jev-support-triage/triage.py", "--offline"],
+        cwd=root,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+    if offline.returncode:
+        raise AssertionError(f"Jev offline README command failed: {offline.stdout}{offline.stderr}")
+    cli_report = json.loads(offline.stdout)
+    if cli_report["summary"] != expected_summary or cli_report["network_calls"] != 0:
+        raise AssertionError("Jev offline CLI output did not reconcile")
+
+    live_without_key = subprocess.run(
+        [sys.executable, "-B", "recipes/jev-support-triage/triage.py", "--live"],
+        cwd=root,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+    if live_without_key.returncode == 0 or "TYPESAFE_API_KEY" not in live_without_key.stdout:
+        raise AssertionError("Jev live mode did not fail closed without its environment key")
+
+    payload = recipe.question_payload(cases[0]["message"])
+    if payload["model"] != "jev-1.13.0" or payload["state"] != {"message": cases[0]["message"]}:
+        raise AssertionError("Jev live payload contract changed")
+    return {
+        "cases": 16,
+        "routable_correct_auto": 10,
+        "review_gated": 5,
+        "network_calls": 0,
+        "external_write": False,
+    }
+
+
 def verify(
     root: Path | None = None,
     *,
@@ -209,6 +329,7 @@ def verify(
     root = (root or Path(__file__).resolve().parent).resolve()
     _assert_candidate_boundary(root)
     csv_summary = _verify_csv_report(root)
+    jev_summary = _verify_jev_recipe(root)
 
     supplied_inputs = (
         transcript is not _MISSING,
@@ -224,6 +345,7 @@ def verify(
             "files": len(EXPECTED_FILES),
             "prepared_tasks": len(plan["tasks"]),
             "csv_report": csv_summary,
+            "jev_report": jev_summary,
             "external_write": False,
         }
 
@@ -313,6 +435,7 @@ def verify(
         "deterministic_prepare": True,
         "reviewed_action_line_ids": sorted(reviewed_line_ids),
         "csv_report": csv_summary,
+        "jev_report": jev_summary,
         "first_inserted": first["inserted"],
         "repeat_inserted": repeat["inserted"],
         "stored": repeat["total_stored"],
@@ -330,6 +453,7 @@ def main() -> int:
     print("PASS: separate human-reviewed evidence boundary")
     print("PASS: deterministic prepare and schema validation")
     print("PASS: CSV README command, edge cases, and narrative reconciliation")
+    print("PASS: Jev recorded fixture, provisional abstention gate, and offline/live boundary")
     print(
         "PASS: first_run.inserted={first_inserted}; "
         "repeat_run.inserted={repeat_inserted}; "
