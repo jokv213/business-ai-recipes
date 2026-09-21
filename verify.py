@@ -36,6 +36,10 @@ EXPECTED_FILES = {
     "recipes/jev-support-triage/cases.json",
     "recipes/jev-support-triage/observed-answers.json",
     "recipes/jev-support-triage/triage.py",
+    "recipes/jev-csv-exception-routing/README.md",
+    "recipes/jev-csv-exception-routing/cases.json",
+    "recipes/jev-csv-exception-routing/recorded-answers.json",
+    "recipes/jev-csv-exception-routing/route.py",
 }
 _MISSING = object()
 
@@ -98,6 +102,16 @@ def _load_jev_recipe(root: Path):
     spec = importlib.util.spec_from_file_location("public_jev_support_triage", path)
     if spec is None or spec.loader is None:
         raise AssertionError("public Jev recipe could not be loaded")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_jev_csv_exception_recipe(root: Path):
+    path = root / "recipes" / "jev-csv-exception-routing" / "route.py"
+    spec = importlib.util.spec_from_file_location("public_jev_csv_exception_routing", path)
+    if spec is None or spec.loader is None:
+        raise AssertionError("public Jev CSV exception recipe could not be loaded")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -319,6 +333,122 @@ def _verify_jev_recipe(root: Path) -> dict:
     }
 
 
+def _verify_jev_csv_exception_recipe(root: Path) -> dict:
+    recipe = _load_jev_csv_exception_recipe(root)
+    recipe_root = root / "recipes" / "jev-csv-exception-routing"
+    cases_path = recipe_root / "cases.json"
+    recorded_path = recipe_root / "recorded-answers.json"
+    cases = recipe.load_cases(cases_path)
+    report = recipe.reproduce(cases_path, recorded_path)
+    expected_baseline = {
+        "processed_count": 24,
+        "auto_candidate_count": 15,
+        "review_count": 5,
+        "unclassifiable_count": 4,
+        "review_or_hold_count": 9,
+        "review_rate": 0.375,
+        "correct_auto_count": 12,
+        "false_auto_count": 3,
+        "dangerous_false_auto_count": 3,
+        "missed_candidate_count": 0,
+    }
+    expected_jev = {
+        "processed_count": 24,
+        "auto_candidate_count": 11,
+        "review_count": 12,
+        "unclassifiable_count": 1,
+        "review_or_hold_count": 13,
+        "review_rate": 0.5417,
+        "correct_auto_count": 11,
+        "false_auto_count": 0,
+        "dangerous_false_auto_count": 0,
+        "missed_candidate_count": 1,
+    }
+    if report["fixture_count"] != len(cases) or len(cases) != 24:
+        raise AssertionError("CSV exception fixture count changed")
+    if report["baseline"] != expected_baseline or report["jev"] != expected_jev:
+        raise AssertionError("CSV exception routing metrics changed")
+    if report["input_fixture_sha256"] != hashlib.sha256(cases_path.read_bytes()).hexdigest():
+        raise AssertionError("CSV exception input fixture hash does not reconcile")
+    if (
+        report["recorded_fixture_sha256"]
+        != "31fb5dc7dc5dfb6a26e4d65bdd57a89dc8bf3ca52f12c17487a718bcb18d43a3"
+        or report["recorded_response_status"] != "recorded_choice_fixture_not_live_call"
+        or report["model"] != "jev-1.13.0"
+        or report["observed_at"] is not None
+        or report["thresholds"] != {"probability": 0.85, "confidence": 0.65}
+        or report["measurement"]
+        != {
+            "provider_observation": "not_run",
+            "provider_calls": 0,
+            "provider_body_saved": False,
+            "elapsed_ms": None,
+            "input_tokens": None,
+            "cost_estimate_usd": None,
+            "cost_basis": "not measured; no live provider call",
+        }
+        or report["offline"] is not True
+        or report["network_calls"] != 0
+        or report["external_write"] is not False
+    ):
+        raise AssertionError("CSV exception offline boundary or measurement metadata changed")
+    if report["comparison"] != {
+        "same_fixture": True,
+        "baseline_false_auto_count": 3,
+        "jev_false_auto_count": 0,
+        "baseline_dangerous_false_auto_count": 3,
+        "jev_dangerous_false_auto_count": 0,
+        "false_auto_reduction_count": 3,
+        "auto_candidate_recommendation": "DO_NOT_RECOMMEND_AUTO_ROUTING",
+    }:
+        raise AssertionError("CSV exception comparison or safety recommendation changed")
+    if sum(case["group"] == "review" for case in cases) < 6:
+        raise AssertionError("CSV exception fixture lost required review examples")
+
+    changed = json.loads(recorded_path.read_text(encoding="utf-8"))
+    changed["cases"][0]["answer"]["choice"] = "billing"
+    with TemporaryDirectory(prefix="jev-csv-exception-invalid-") as directory:
+        invalid = Path(directory) / "recorded-answers.json"
+        invalid.write_text(json.dumps(changed), encoding="utf-8")
+        _must_refuse(lambda: recipe.reproduce(cases_path, invalid))
+
+    environment = os.environ.copy()
+    environment.pop("PYTHONPATH", None)
+    environment.pop("PYTHONHOME", None)
+    environment.pop("TYPESAFE_API_KEY", None)
+    environment["PYTHONDONTWRITEBYTECODE"] = "1"
+    offline = subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            "recipes/jev-csv-exception-routing/route.py",
+            "--offline",
+        ],
+        cwd=root,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+    if offline.returncode:
+        raise AssertionError(
+            f"CSV exception offline README command failed: {offline.stdout}{offline.stderr}"
+        )
+    cli_report = json.loads(offline.stdout)
+    if cli_report["baseline"] != expected_baseline or cli_report["jev"] != expected_jev:
+        raise AssertionError("CSV exception offline CLI output did not reconcile")
+    return {
+        "cases": 24,
+        "baseline_false_auto": 3,
+        "jev_false_auto": 0,
+        "review_or_hold": {"baseline": 9, "jev": 13},
+        "unclassifiable": {"baseline": 4, "jev": 1},
+        "network_calls": 0,
+        "external_write": False,
+    }
+
+
 def verify(
     root: Path | None = None,
     *,
@@ -330,6 +460,7 @@ def verify(
     _assert_candidate_boundary(root)
     csv_summary = _verify_csv_report(root)
     jev_summary = _verify_jev_recipe(root)
+    jev_csv_exception_summary = _verify_jev_csv_exception_recipe(root)
 
     supplied_inputs = (
         transcript is not _MISSING,
@@ -346,6 +477,7 @@ def verify(
             "prepared_tasks": len(plan["tasks"]),
             "csv_report": csv_summary,
             "jev_report": jev_summary,
+            "jev_csv_exception_report": jev_csv_exception_summary,
             "external_write": False,
         }
 
@@ -436,6 +568,7 @@ def verify(
         "reviewed_action_line_ids": sorted(reviewed_line_ids),
         "csv_report": csv_summary,
         "jev_report": jev_summary,
+        "jev_csv_exception_report": jev_csv_exception_summary,
         "first_inserted": first["inserted"],
         "repeat_inserted": repeat["inserted"],
         "stored": repeat["total_stored"],
@@ -454,6 +587,12 @@ def main() -> int:
     print("PASS: deterministic prepare and schema validation")
     print("PASS: CSV README command, edge cases, and narrative reconciliation")
     print("PASS: Jev recorded fixture, provisional abstention gate, and offline/live boundary")
+    print(
+        "PASS: Jev CSV exception comparison; cases={cases}; "
+        "baseline_false_auto={baseline_false_auto}; jev_false_auto={jev_false_auto}".format(
+            **result["jev_csv_exception_report"]
+        )
+    )
     print(
         "PASS: first_run.inserted={first_inserted}; "
         "repeat_run.inserted={repeat_inserted}; "

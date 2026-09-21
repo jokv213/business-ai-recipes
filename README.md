@@ -95,6 +95,18 @@ python3 -B recipes/csv-to-report/report.py \
 
 暫定ゲートは選択確率 `0.85` 以上かつconfidence `0.65` 以上、`other` は常にレビューです。`python3 -B recipes/jev-support-triage/triage.py --offline` で `network_calls=0` と `external_write=false` を確認できます。任意の `--live` は同梱合成fixtureだけを、環境変数 `TYPESAFE_API_KEY` でTypeSafe直通へ送る経路ですが、この公開候補・CI・通常手順では実行していません。返信や外部writeは行いません。
 
+## Recipe #4: Jev CSV Exception Routing
+
+既存のCSV決定的検査が返す `data_row` と `flags` に添えた合成説明文24件を、固定キーワード基準線と記録済みJev Choiceで担当候補または `review` へ仕分けます。金額・件数・欠損・不正値・重複IDの判定はPython側に残し、Jevの出力だけで修正、送信、承認はしません。詳細は[recipe README](recipes/jev-csv-exception-routing/README.md)を参照してください。
+
+今回の同一fixture比較は、基準線が自動候補15・review/保留9・分類不能4・誤自動3、記録済みJevが自動候補11・review/保留13・分類不能1・誤自動0でした。基準線に危険な誤自動が3件あるため、結果は `DO_NOT_RECOMMEND_AUTO_ROUTING` です。これは24件の合成fixture内の観測であり、実際のprovider観測、token・費用、実顧客データの精度、導入成果を示しません。
+
+```bash
+python3 -B recipes/jev-csv-exception-routing/route.py --offline
+```
+
+このrecipeにはlive provider経路がありません。`recorded-answers.json` は `jev-1.13.0` のChoice形式を模した合成記録で、`observed_at=null`、provider call 0、network call 0、external write `false` です。
+
 ## 同梱ファイル
 
 ```text
@@ -119,6 +131,10 @@ recipes/jev-support-triage/README.md
 recipes/jev-support-triage/cases.json
 recipes/jev-support-triage/observed-answers.json
 recipes/jev-support-triage/triage.py
+recipes/jev-csv-exception-routing/README.md
+recipes/jev-csv-exception-routing/cases.json
+recipes/jev-csv-exception-routing/recorded-answers.json
+recipes/jev-csv-exception-routing/route.py
 ```
 
 コードと合成fixtureは MIT License で公開しています。

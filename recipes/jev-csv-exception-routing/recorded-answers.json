@@ -1,0 +1,223 @@
+{
+  "fixture_status": "SYNTHETIC_ONLY_NOT_PRODUCTION",
+  "recorded_response_status": "recorded_choice_fixture_not_live_call",
+  "model": "jev-1.13.0",
+  "recorded_at": "2026-09-21",
+  "observed_at": null,
+  "provider_calls": 0,
+  "provider_body_saved": false,
+  "input_fixture_sha256": "ca3f2a36f16bcb74ed0d4f6509751fd26e37fad5ca8749dcd01f19eb0c4f7dc3",
+  "cases": [
+    {
+      "id": "csv-ex-001",
+      "answer": {
+        "type": "choice",
+        "choice": "accounting",
+        "confidence": 0.94,
+        "probabilities": {"accounting": 0.96, "sales_ops": 0.01, "data_quality": 0.01, "review": 0.02}
+      }
+    },
+    {
+      "id": "csv-ex-002",
+      "answer": {
+        "type": "choice",
+        "choice": "accounting",
+        "confidence": 0.94,
+        "probabilities": {"accounting": 0.96, "sales_ops": 0.01, "data_quality": 0.01, "review": 0.02}
+      }
+    },
+    {
+      "id": "csv-ex-003",
+      "answer": {
+        "type": "choice",
+        "choice": "accounting",
+        "confidence": 0.94,
+        "probabilities": {"accounting": 0.96, "sales_ops": 0.01, "data_quality": 0.01, "review": 0.02}
+      }
+    },
+    {
+      "id": "csv-ex-004",
+      "answer": {
+        "type": "choice",
+        "choice": "accounting",
+        "confidence": 0.94,
+        "probabilities": {"accounting": 0.96, "sales_ops": 0.01, "data_quality": 0.01, "review": 0.02}
+      }
+    },
+    {
+      "id": "csv-ex-005",
+      "answer": {
+        "type": "choice",
+        "choice": "sales_ops",
+        "confidence": 0.94,
+        "probabilities": {"accounting": 0.01, "sales_ops": 0.96, "data_quality": 0.01, "review": 0.02}
+      }
+    },
+    {
+      "id": "csv-ex-006",
+      "answer": {
+        "type": "choice",
+        "choice": "sales_ops",
+        "confidence": 0.94,
+        "probabilities": {"accounting": 0.01, "sales_ops": 0.96, "data_quality": 0.01, "review": 0.02}
+      }
+    },
+    {
+      "id": "csv-ex-007",
+      "answer": {
+        "type": "choice",
+        "choice": "sales_ops",
+        "confidence": 0.94,
+        "probabilities": {"accounting": 0.01, "sales_ops": 0.96, "data_quality": 0.01, "review": 0.02}
+      }
+    },
+    {
+      "id": "csv-ex-008",
+      "answer": {
+        "type": "choice",
+        "choice": "sales_ops",
+        "confidence": 0.94,
+        "probabilities": {"accounting": 0.01, "sales_ops": 0.96, "data_quality": 0.01, "review": 0.02}
+      }
+    },
+    {
+      "id": "csv-ex-009",
+      "answer": {
+        "type": "choice",
+        "choice": "data_quality",
+        "confidence": 0.94,
+        "probabilities": {"accounting": 0.01, "sales_ops": 0.01, "data_quality": 0.96, "review": 0.02}
+      }
+    },
+    {
+      "id": "csv-ex-010",
+      "answer": {
+        "type": "choice",
+        "choice": "data_quality",
+        "confidence": 0.94,
+        "probabilities": {"accounting": 0.01, "sales_ops": 0.01, "data_quality": 0.96, "review": 0.02}
+      }
+    },
+    {
+      "id": "csv-ex-011",
+      "answer": {
+        "type": "choice",
+        "choice": "data_quality",
+        "confidence": 0.94,
+        "probabilities": {"accounting": 0.01, "sales_ops": 0.01, "data_quality": 0.96, "review": 0.02}
+      }
+    },
+    {
+      "id": "csv-ex-012",
+      "answer": {
+        "type": "choice",
+        "choice": "data_quality",
+        "confidence": 0.61,
+        "probabilities": {"accounting": 0.02, "sales_ops": 0.01, "data_quality": 0.72, "review": 0.25}
+      }
+    },
+    {
+      "id": "csv-ex-013",
+      "answer": {
+        "type": "choice",
+        "choice": "review",
+        "confidence": 0.91,
+        "probabilities": {"accounting": 0.02, "sales_ops": 0.02, "data_quality": 0.01, "review": 0.95}
+      }
+    },
+    {
+      "id": "csv-ex-014",
+      "answer": {
+        "type": "choice",
+        "choice": "review",
+        "confidence": 0.91,
+        "probabilities": {"accounting": 0.02, "sales_ops": 0.02, "data_quality": 0.01, "review": 0.95}
+      }
+    },
+    {
+      "id": "csv-ex-015",
+      "answer": {
+        "type": "choice",
+        "choice": "review",
+        "confidence": 0.91,
+        "probabilities": {"accounting": 0.02, "sales_ops": 0.02, "data_quality": 0.01, "review": 0.95}
+      }
+    },
+    {
+      "id": "csv-ex-016",
+      "answer": {
+        "type": "choice",
+        "choice": "review",
+        "confidence": 0.91,
+        "probabilities": {"accounting": 0.02, "sales_ops": 0.02, "data_quality": 0.01, "review": 0.95}
+      }
+    },
+    {
+      "id": "csv-ex-017",
+      "answer": {"type": "choice", "choice": null, "confidence": null, "probabilities": {}}
+    },
+    {
+      "id": "csv-ex-018",
+      "answer": {
+        "type": "choice",
+        "choice": "review",
+        "confidence": 0.91,
+        "probabilities": {"accounting": 0.02, "sales_ops": 0.02, "data_quality": 0.01, "review": 0.95}
+      }
+    },
+    {
+      "id": "csv-ex-019",
+      "answer": {
+        "type": "choice",
+        "choice": "review",
+        "confidence": 0.91,
+        "probabilities": {"accounting": 0.02, "sales_ops": 0.02, "data_quality": 0.01, "review": 0.95}
+      }
+    },
+    {
+      "id": "csv-ex-020",
+      "answer": {
+        "type": "choice",
+        "choice": "review",
+        "confidence": 0.91,
+        "probabilities": {"accounting": 0.02, "sales_ops": 0.02, "data_quality": 0.01, "review": 0.95}
+      }
+    },
+    {
+      "id": "csv-ex-021",
+      "answer": {
+        "type": "choice",
+        "choice": "review",
+        "confidence": 0.91,
+        "probabilities": {"accounting": 0.02, "sales_ops": 0.02, "data_quality": 0.01, "review": 0.95}
+      }
+    },
+    {
+      "id": "csv-ex-022",
+      "answer": {
+        "type": "choice",
+        "choice": "review",
+        "confidence": 0.91,
+        "probabilities": {"accounting": 0.02, "sales_ops": 0.02, "data_quality": 0.01, "review": 0.95}
+      }
+    },
+    {
+      "id": "csv-ex-023",
+      "answer": {
+        "type": "choice",
+        "choice": "review",
+        "confidence": 0.91,
+        "probabilities": {"accounting": 0.02, "sales_ops": 0.02, "data_quality": 0.01, "review": 0.95}
+      }
+    },
+    {
+      "id": "csv-ex-024",
+      "answer": {
+        "type": "choice",
+        "choice": "review",
+        "confidence": 0.91,
+        "probabilities": {"accounting": 0.02, "sales_ops": 0.02, "data_quality": 0.01, "review": 0.95}
+      }
+    }
+  ]
+}

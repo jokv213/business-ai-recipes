@@ -34,3 +34,5 @@ jobs:
         run: python3 -B recipes/csv-to-report/report.py --csv recipes/csv-to-report/sales.csv
       - name: Reproduce the recorded Jev triage offline
         run: python3 -B recipes/jev-support-triage/triage.py --offline
+      - name: Compare CSV exception routing offline
+        run: python3 -B recipes/jev-csv-exception-routing/route.py --offline
