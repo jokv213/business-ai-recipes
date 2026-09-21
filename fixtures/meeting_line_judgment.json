@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "fixture_metadata": {
+    "fixture_id": "synthetic-luna-launch-20260910-meeting-line-judgment",
+    "fixture_kind": "recorded_synthetic_judgment_fixture",
+    "label": "SYNTHETIC_ONLY_NOT_PRODUCTION",
+    "model": "jev-1.13.0",
+    "recorded_on": "2026-09-19",
+    "source_is_synthetic": true,
+    "is_production_data": false,
+    "is_production_result": false,
+    "live_api_call": false,
+    "record_origin": "hand_authored_synthetic_fixture_not_api_observation"
+  },
+  "meeting_id": "synthetic-luna-launch-20260910",
+  "source_hash": "5c3383e686e67462466c0c7896e336cdd68fc8e757891dd8719664e6e548d86e",
+  "provisional_thresholds": {
+    "probability": 0.85,
+    "confidence": 0.65
+  },
+  "judgments": [
+    {
+      "line_id": "L1",
+      "answer": {
+        "type": "choice",
+        "choice": "quote_or_context",
+        "probabilities": {
+          "action_candidate": 0.01,
+          "decision": 0.01,
+          "quote_or_context": 0.97,
+          "undecided": 0.01
+        },
+        "confidence": 0.98
+      },
+      "ambiguity_flags": []
+    },
+    {
+      "line_id": "L2",
+      "answer": {
+        "type": "choice",
+        "choice": "action_candidate",
+        "probabilities": {
+          "action_candidate": 0.97,
+          "decision": 0.01,
+          "quote_or_context": 0.01,
+          "undecided": 0.01
+        },
+        "confidence": 0.96
+      },
+      "ambiguity_flags": []
+    },
+    {
+      "line_id": "L3",
+      "answer": {
+        "type": "choice",
+        "choice": "action_candidate",
+        "probabilities": {
+          "action_candidate": 0.8,
+          "decision": 0.03,
+          "quote_or_context": 0.02,
+          "undecided": 0.15
+        },
+        "confidence": 0.6
+      },
+      "ambiguity_flags": ["owner_or_due_unknown"]
+    },
+    {
+      "line_id": "L4",
+      "answer": {
+        "type": "choice",
+        "choice": "decision",
+        "probabilities": {
+          "action_candidate": 0.01,
+          "decision": 0.98,
+          "quote_or_context": 0.005,
+          "undecided": 0.005
+        },
+        "confidence": 0.98
+      },
+      "ambiguity_flags": []
+    },
+    {
+      "line_id": "L5",
+      "answer": {
+        "type": "choice",
+        "choice": "quote_or_context",
+        "probabilities": {
+          "action_candidate": 0.01,
+          "decision": 0.01,
+          "quote_or_context": 0.97,
+          "undecided": 0.01
+        },
+        "confidence": 0.99
+      },
+      "ambiguity_flags": []
+    },
+    {
+      "line_id": "L6",
+      "answer": {
+        "type": "choice",
+        "choice": "undecided",
+        "probabilities": {
+          "action_candidate": 0.01,
+          "decision": 0.01,
+          "quote_or_context": 0.01,
+          "undecided": 0.97
+        },
+        "confidence": 0.96
+      },
+      "ambiguity_flags": []
+    }
+  ]
+}

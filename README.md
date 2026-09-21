@@ -28,9 +28,10 @@ AIが議事録中の「見送り」「未決定」「第三者メールの引用
 ```bash
 python3 -B run_demo.py
 python3 -B verify.py
+python3 -B recipes/meeting-line-judgment/recipe.py
 ```
 
-両CLIは同梱の合成fixtureだけを使い、任意のモデル出力やレビュー入力を受け取りません。`run_demo.py` は一時ディレクトリ内のSQLite DBへ模擬登録して、実行後にDBを削除します。`verify.py` は同じ入力契約の拒否条件も検査します。別の一時ディレクトリへこのフォルダだけをコピーして再現できます。
+両CLIとline recipeは同梱の合成fixtureだけを使い、任意のモデル出力やレビュー入力を受け取りません。`run_demo.py` は一時ディレクトリ内のSQLite DBへ模擬登録して、実行後にDBを削除します。`verify.py` は同じ入力契約の拒否条件に加え、行判定のreview移行、キーなしlive拒否、ネットワーク境界のテストを検査します。別の一時ディレクトリへこのフォルダだけをコピーして再現できます。
 
 実行結果は次の条件を満たします。
 
@@ -39,6 +40,8 @@ first_run.inserted=2
 repeat_run.inserted=0
 repeat_run.total_stored=2
 external_write=False
+line_judgment.action_candidate_count=1
+line_judgment.review_count=5
 ```
 
 試して動かなかった点、実運用へ移す際に不足する境界、次に見たい業務例があれば、[Issue](https://github.com/jokv213/business-ai-recipes/issues)へ再現条件と一緒に残してください。
@@ -74,7 +77,25 @@ result = apply_local(plan, approval, "tasks.sqlite3", human_review=human_review)
 
 この境界は一般的なprompt injectionを完全には防止しません。コードは引用、見送り、否定、未決定などの意味を自動判定せず、確認済み行に含まれる指示的な文章も検知しきれません。人による行の選定と、ローカル模擬の最終承認を省略しないでください。
 
-## Recipe #2: CSV-to-Checked-Report
+## Recipe #2: Jev Meeting Line Judgment
+
+`recipes/meeting-line-judgment/recipe.py` は、同梱の合成議事録6行を `action_candidate` / `decision` / `quote_or_context` / `undecided` に分け、実行候補以外、曖昧、確信度不足、引用・文脈、未決定を `review` へ送る公開candidateです。候補も自動承認・自動タスク登録はせず、全候補に人間確認を要求します。
+
+この候補のJev **live実測日はありません**。`fixtures/meeting_line_judgment.json` は2026-09-19作成の**手書き・記録済み合成fixture**で、`live_api_call=false`、`record_origin=hand_authored_synthetic_fixture_not_api_observation` と明示しています。fixtureのモデル欄 `jev-1.13.0` は対象契約であり、live観測、実測精度、実利用結果を示しません。既存の問い合わせ分類16件の2026-09-19ライブ実測を、この議事録行判定の実測として流用していません。
+
+暫定ゲートは選択確率 `0.85` 以上かつconfidence `0.65` 以上です。fixtureでは1行が `action_candidate` 候補、5行が `review` になります。`decision`、`quote_or_context`、`undecided`、曖昧フラグ付き行、確率・confidence不足はreviewです。日付・担当者・数値の抽出・検証・保存はこのrecipeの責務外で、Jevへ委ねません。
+
+オフライン再現:
+
+```bash
+python3 -B recipes/meeting-line-judgment/recipe.py
+```
+
+任意の `--live` は、`TYPESAFE_API_KEY` を明示したときだけ、TypeSafe直通のJev `jev-1.13.0` へ同梱の合成6行を送ります。Keychainは使わず、キー、認証ヘッダー、provider本文を出力・保存しません。返信、承認、タスク登録、その他の業務外部writeは行わず、キーなしでは拒否します。workerの検証ではライブ経路を実行していません。
+
+失敗条件は、固定4クラス以外、選択確率またはconfidenceが閾値未満、曖昧フラグ、会議ID/source hash/行ID/Choice分布/モデル名の不一致、非合成またはliveと偽装されたfixtureです。引用・背景・見送り・未決定を意味的に完全判定できること、日本語の一般精度、実顧客データでの安全性、確率校正、プロンプトインジェクション耐性、費用、継続利用、公開後の反応は未検証です。小標本の成功を実績や一般精度と扱わず、高confidenceの誤判定も人間確認で止めます。
+
+## Recipe #3: CSV-to-Checked-Report
 
 合成CSVの行数・欠損・不正値・重複ID・合計を決定的に集計し、説明文内の数値が計算結果と一致するか検算します。実行時にAIや外部APIは呼びません。集計ルールと失敗例は[recipe README](recipes/csv-to-report/README.md)を参照してください。
 
@@ -87,7 +108,7 @@ python3 -B recipes/csv-to-report/report.py \
 
 合成入力は4行で、金額有効3行・欠損1件・合計4,500円です。欠損があるため `REVIEW_REQUIRED` となり、利用前に元CSVを人が確認します。空入力、重複、欠損と不正文字列の組み合わせも同じ公開検証で確認します。
 
-## Recipe #3: Jev Support Triage
+## Recipe #4: Jev Support Triage
 
 日本語中心の合成問い合わせ16件を、記録済みfixtureに固定したTypeSafe Jev `jev-1.13.0` のChoice応答から担当候補または `review` へ再分類するrecipeです。オフライン経路はキー不要・ネットワーク不要で、実測回答を無意味に再送しません。詳細は[recipe README](recipes/jev-support-triage/README.md)を参照してください。
 
@@ -95,7 +116,7 @@ python3 -B recipes/csv-to-report/report.py \
 
 暫定ゲートは選択確率 `0.85` 以上かつconfidence `0.65` 以上、`other` は常にレビューです。`python3 -B recipes/jev-support-triage/triage.py --offline` で `network_calls=0` と `external_write=false` を確認できます。任意の `--live` は同梱合成fixtureだけを、環境変数 `TYPESAFE_API_KEY` でTypeSafe直通へ送る経路ですが、この公開候補・CI・通常手順では実行していません。返信や外部writeは行いません。
 
-## Recipe #4: Jev CSV Exception Routing
+## Recipe #5: Jev CSV Exception Routing
 
 既存のCSV決定的検査が返す `data_row` と `flags` に添えた合成説明文24件を、固定キーワード基準線と記録済みJev Choiceで担当候補または `review` へ仕分けます。金額・件数・欠損・不正値・重複IDの判定はPython側に残し、Jevの出力だけで修正、送信、承認はしません。詳細は[recipe README](recipes/jev-csv-exception-routing/README.md)を参照してください。
 
@@ -121,6 +142,9 @@ verify.py
 fixtures/synthetic_meeting.json
 fixtures/selected_model_output.json
 fixtures/human_review.json
+fixtures/meeting_line_judgment.json
+recipes/meeting-line-judgment/README.md
+recipes/meeting-line-judgment/recipe.py
 recipes/csv-to-report/README.md
 recipes/csv-to-report/report.py
 recipes/csv-to-report/sales.csv

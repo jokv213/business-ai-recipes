@@ -26,6 +26,9 @@ EXPECTED_FILES = {
     "fixtures/synthetic_meeting.json",
     "fixtures/selected_model_output.json",
     "fixtures/human_review.json",
+    "fixtures/meeting_line_judgment.json",
+    "recipes/meeting-line-judgment/README.md",
+    "recipes/meeting-line-judgment/recipe.py",
     "recipes/csv-to-report/README.md",
     "recipes/csv-to-report/report.py",
     "recipes/csv-to-report/sales.csv",
@@ -115,6 +118,100 @@ def _load_jev_csv_exception_recipe(root: Path):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _load_line_judgment_recipe(root: Path):
+    path = root / "recipes" / "meeting-line-judgment" / "recipe.py"
+    spec = importlib.util.spec_from_file_location("public_meeting_line_judgment", path)
+    if spec is None or spec.loader is None:
+        raise AssertionError("public meeting-line judgment recipe could not be loaded")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _verify_meeting_line_judgment(root: Path) -> dict:
+    recipe = _load_line_judgment_recipe(root)
+    meeting_path = root / "fixtures" / "synthetic_meeting.json"
+    fixture_path = root / "fixtures" / "meeting_line_judgment.json"
+    meeting = recipe.load_meeting(meeting_path)
+    fixture = recipe.load_recorded_fixture(fixture_path)
+    result = recipe.offline_result(meeting_path, fixture_path)
+    if result != recipe.offline_result(meeting_path, fixture_path):
+        raise AssertionError("meeting-line judgment is not deterministic")
+    if (
+        fixture["fixture_metadata"]["live_api_call"] is not False
+        or fixture["fixture_metadata"]["record_origin"]
+        != "hand_authored_synthetic_fixture_not_api_observation"
+        or result["fixture_status"] != "recorded_synthetic_fixture_not_live"
+        or result["live_api_call"] is not False
+    ):
+        raise AssertionError("recorded meeting-line fixture is mislabeled as live")
+    if (
+        result["input_line_count"],
+        result["action_candidate_count"],
+        result["review_count"],
+    ) != (6, 1, 5):
+        raise AssertionError("meeting-line judgment count reconciliation failed")
+    action_ids = [row["line_id"] for row in result["action_candidates"]]
+    review_ids = [row["line_id"] for row in result["review"]]
+    if action_ids != ["L2"] or review_ids != ["L1", "L3", "L4", "L5", "L6"]:
+        raise AssertionError("meeting-line action/review routing changed")
+    review_by_id = {row["line_id"]: row for row in result["review"]}
+    if not {
+        "probability_below_threshold",
+        "confidence_below_threshold",
+        "ambiguity_flagged",
+    }.issubset(set(review_by_id["L3"]["review_reasons"])):
+        raise AssertionError("ambiguous or low-confidence action candidate was not reviewed")
+    if any(
+        key in row
+        for row in [*result["action_candidates"], *result["review"]]
+        for key in ("owner", "due", "number", "amount")
+    ):
+        raise AssertionError("meeting-line judgment extracted a code-owned field")
+    if (
+        result["human_review_required"] is not True
+        or result["auto_decision"] is not False
+        or result["auto_approval"] is not False
+        or result["task_registration"] is not False
+        or result["external_write"] is not False
+    ):
+        raise AssertionError("meeting-line judgment crossed the external-write boundary")
+
+    payload = recipe.question_payload(meeting["lines"][0])
+    if payload["model"] != "jev-1.13.0" or set(payload["state"]) != {
+        "meeting_id",
+        "line_id",
+        "text",
+    }:
+        raise AssertionError("live payload does not use the fixed synthetic line contract")
+    environment = os.environ.copy()
+    environment.pop("TYPESAFE_API_KEY", None)
+    environment.pop("PYTHONPATH", None)
+    environment["PYTHONDONTWRITEBYTECODE"] = "1"
+    live_without_key = subprocess.run(
+        [sys.executable, "-B", "recipes/meeting-line-judgment/recipe.py", "--live"],
+        cwd=root,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+    if (
+        live_without_key.returncode == 0
+        or "TYPESAFE_API_KEY" not in live_without_key.stderr
+        or "Authorization" in live_without_key.stderr
+    ):
+        raise AssertionError("keyless --live did not refuse before network use")
+    return {
+        "input_lines": result["input_line_count"],
+        "action_candidates": result["action_candidate_count"],
+        "review": result["review_count"],
+        "keyless_live_refused": True,
+        "external_write": False,
+    }
 
 
 def _verify_csv_report(root: Path) -> dict:
@@ -459,6 +556,7 @@ def verify(
     root = (root or Path(__file__).resolve().parent).resolve()
     _assert_candidate_boundary(root)
     csv_summary = _verify_csv_report(root)
+    line_judgment_summary = _verify_meeting_line_judgment(root)
     jev_summary = _verify_jev_recipe(root)
     jev_csv_exception_summary = _verify_jev_csv_exception_recipe(root)
 
@@ -476,6 +574,7 @@ def verify(
             "files": len(EXPECTED_FILES),
             "prepared_tasks": len(plan["tasks"]),
             "csv_report": csv_summary,
+            "line_judgment": line_judgment_summary,
             "jev_report": jev_summary,
             "jev_csv_exception_report": jev_csv_exception_summary,
             "external_write": False,
@@ -567,6 +666,7 @@ def verify(
         "deterministic_prepare": True,
         "reviewed_action_line_ids": sorted(reviewed_line_ids),
         "csv_report": csv_summary,
+        "line_judgment": line_judgment_summary,
         "jev_report": jev_summary,
         "jev_csv_exception_report": jev_csv_exception_summary,
         "first_inserted": first["inserted"],
@@ -585,6 +685,7 @@ def main() -> int:
     print(f"PASS: candidate boundary and synthetic fixture labels; files={result['files']}")
     print("PASS: separate human-reviewed evidence boundary")
     print("PASS: deterministic prepare and schema validation")
+    print("PASS: Jev line judgment fixture, abstention, keyless live refusal, and write boundary")
     print("PASS: CSV README command, edge cases, and narrative reconciliation")
     print("PASS: Jev recorded fixture, provisional abstention gate, and offline/live boundary")
     print(

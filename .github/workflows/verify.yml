@@ -30,6 +30,8 @@ jobs:
         run: python -B verify.py
       - name: Run the repeat-safe local demonstration
         run: python -B run_demo.py
+      - name: Run the offline Jev meeting-line candidate
+        run: python -B recipes/meeting-line-judgment/recipe.py
       - name: Run the CSV reconciliation command from the README
         run: python3 -B recipes/csv-to-report/report.py --csv recipes/csv-to-report/sales.csv
       - name: Reproduce the recorded Jev triage offline

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import sqlite3
 import sys
@@ -9,6 +10,34 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from recipe import Refused, apply_local, approve, prepare, read_json
+
+
+def line_judgment_summary(root: Path) -> dict:
+    path = root / "recipes" / "meeting-line-judgment" / "recipe.py"
+    spec = importlib.util.spec_from_file_location("public_meeting_line_judgment", path)
+    if spec is None or spec.loader is None:
+        raise Refused("Meeting line judgment recipe could not be loaded")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    try:
+        result = module.offline_result()
+    except ValueError as exc:
+        raise Refused("Meeting line judgment demo failed") from exc
+    if (
+        result["fixture_status"] != "recorded_synthetic_fixture_not_live"
+        or result["action_candidate_count"] != 1
+        or result["review_count"] != 5
+        or result["external_write"] is not False
+        or result["human_review_required"] is not True
+    ):
+        raise Refused("Meeting line judgment count or boundary reconciliation failed")
+    return {
+        "fixture_status": result["fixture_status"],
+        "action_candidate_count": result["action_candidate_count"],
+        "review_count": result["review_count"],
+        "human_review_required": result["human_review_required"],
+        "external_write": result["external_write"],
+    }
 
 
 def demo_result() -> dict:
@@ -52,6 +81,7 @@ def demo_result() -> dict:
                 "external_write",
             )
         },
+        "line_judgment": line_judgment_summary(root),
     }
 
 
