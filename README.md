@@ -81,7 +81,9 @@ result = apply_local(plan, approval, "tasks.sqlite3", human_review=human_review)
 
 `recipes/meeting-line-judgment/recipe.py` は、同梱の合成議事録6行を `action_candidate` / `decision` / `quote_or_context` / `undecided` に分け、実行候補以外、曖昧、確信度不足、引用・文脈、未決定を `review` へ送る公開candidateです。候補も自動承認・自動タスク登録はせず、全候補に人間確認を要求します。
 
-この候補のJev **live実測日はありません**。`fixtures/meeting_line_judgment.json` は2026-09-19作成の**手書き・記録済み合成fixture**で、`live_api_call=false`、`record_origin=hand_authored_synthetic_fixture_not_api_observation` と明示しています。fixtureのモデル欄 `jev-1.13.0` は対象契約であり、live観測、実測精度、実利用結果を示しません。既存の問い合わせ分類16件の2026-09-19ライブ実測を、この議事録行判定の実測として流用していません。
+この候補の同梱fixtureは、2026-09-19作成の**手書き・記録済み合成fixture**で、`live_api_call=false`、`record_origin=hand_authored_synthetic_fixture_not_api_observation` と明示しています。fixtureのモデル欄 `jev-1.13.0` は対象契約であり、fixture自体はlive観測、実測精度、実利用結果を示しません。既存の問い合わせ分類16件の2026-09-19ライブ実測を、この議事録行判定のfixtureへ流用していません。
+
+親側の公開前境界測定では、2026-09-21 18:02:18 JSTに同梱の合成6行だけをJevへ6回送信し、6/6回成功、1行をaction candidate、5行をreviewへ送った。壁時計は3,957.8msで、provider本文は保存していない。input token数と費用はrecipe境界で返さないため未測定であり、この小標本は一般精度、実利用、費用の証拠ではない。候補は引き続き人間確認前提で、自動承認・タスク登録・返信は行わない。
 
 暫定ゲートは選択確率 `0.85` 以上かつconfidence `0.65` 以上です。fixtureでは1行が `action_candidate` 候補、5行が `review` になります。`decision`、`quote_or_context`、`undecided`、曖昧フラグ付き行、確率・confidence不足はreviewです。日付・担当者・数値の抽出・検証・保存はこのrecipeの責務外で、Jevへ委ねません。
 
