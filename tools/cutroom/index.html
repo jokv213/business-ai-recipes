@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Cutroom: a local-first transcript guided video editor." />
+    <title>Cutroom — Edit the story. Keep the signal.</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Cutroom home">
+          <span class="brand-mark" aria-hidden="true">C</span>
+          <span class="brand-name">cutroom</span>
+        </a>
+        <div class="topbar-right">
+          <span class="local-badge"><span class="status-dot" aria-hidden="true"></span>Local workspace</span>
+          <span id="config-status" class="config-status" aria-live="polite">Checking media tools…</span>
+        </div>
+      </header>
+
+      <main>
+        <section class="intro" aria-labelledby="page-title">
+          <div class="intro-copy">
+            <p class="eyebrow">TRANSCRIPT GUIDED VIDEO EDITING</p>
+            <h1 id="page-title">Cutroom</h1>
+            <p class="tagline">Edit the story. <em>Keep the signal.</em></p>
+            <p class="intro-note">Choose the moments that matter, then export one clean, continuous cut.</p>
+          </div>
+          <div class="load-card" aria-labelledby="load-title">
+            <div class="load-card-heading">
+              <span class="step-number">01</span>
+              <div>
+                <p class="eyebrow">START WITH MATERIAL</p>
+                <h2 id="load-title">Bring in a video</h2>
+              </div>
+            </div>
+            <div class="load-actions">
+              <button id="demo-button" class="button button-primary" type="button">
+                <span aria-hidden="true">▶</span> Try the sample
+              </button>
+              <label class="file-button button button-secondary" for="video-file">
+                <span aria-hidden="true">＋</span> Import video
+                <input id="video-file" type="file" accept="video/mp4,video/quicktime,video/webm,video/x-matroska,.mp4,.mov,.webm,.mkv" />
+              </label>
+            </div>
+            <p class="microcopy">Your source stays on this local workspace.</p>
+          </div>
+        </section>
+
+        <div id="app-status" class="app-status" role="status" aria-live="polite">Load the sample or import a video to begin.</div>
+
+        <section class="workspace" aria-label="Video editing workspace">
+          <div class="preview-column">
+            <div class="video-shell">
+              <video id="source-video" controls preload="metadata" playsinline aria-label="Source video preview"></video>
+              <div id="video-empty" class="video-empty">
+                <span class="empty-glyph" aria-hidden="true">◒</span>
+                <span>Your video will appear here</span>
+              </div>
+              <p id="subtitle-overlay" class="subtitle-overlay" role="status" aria-live="polite" hidden></p>
+            </div>
+            <div class="video-caption-row">
+              <div>
+                <p id="source-name" class="source-name">No source loaded</p>
+                <p id="source-details" class="source-details">—</p>
+              </div>
+              <div class="time-readout" aria-label="Current source time">
+                <span id="playback-time">00:00.0</span>
+                <span class="time-divider">/</span>
+                <span id="source-duration">00:00.0</span>
+              </div>
+            </div>
+            <div class="playback-tools">
+              <label class="toggle-control" for="selected-only">
+                <input id="selected-only" type="checkbox" />
+                <span class="toggle-track" aria-hidden="true"><span class="toggle-thumb"></span></span>
+                <span>Play selected only</span>
+              </label>
+              <span id="playback-note" class="playback-note">Full source playback</span>
+            </div>
+          </div>
+
+          <aside class="transcript-panel" aria-labelledby="transcript-title">
+            <div class="panel-topline">
+              <div>
+                <p class="eyebrow">02 · FIND THE SIGNAL</p>
+                <h2 id="transcript-title">Transcript</h2>
+              </div>
+              <span id="cue-count" class="count-badge">0 cues</span>
+            </div>
+            <div class="transcript-tools">
+              <label class="search-field" for="transcript-search">
+                <span class="search-icon" aria-hidden="true">⌕</span>
+                <span class="sr-only">Search transcript</span>
+                <input id="transcript-search" type="search" placeholder="Search words or phrases" autocomplete="off" />
+              </label>
+              <label class="file-button compact-button button button-ghost" for="subtitle-file">
+                Add SRT / VTT
+                <input id="subtitle-file" type="file" accept=".srt,.vtt,text/srt,text/vtt" />
+              </label>
+            </div>
+            <div class="selection-toolbar">
+              <button id="selection-undo" class="text-button" type="button" disabled>Undo</button>
+              <button id="selection-reset" class="text-button" type="button" disabled>Reset</button>
+              <span class="toolbar-spacer"></span>
+              <button id="selection-all" class="text-button" type="button" disabled>Select all</button>
+              <button id="selection-none" class="text-button" type="button" disabled>Clear</button>
+            </div>
+            <div id="transcript-list" class="transcript-list" role="list" aria-label="Transcript cues"></div>
+            <div id="transcript-empty" class="panel-empty">Load subtitles to see the transcript.</div>
+          </aside>
+        </section>
+
+        <section class="timeline-section" aria-labelledby="timeline-title">
+          <div class="section-heading-row">
+            <div>
+              <p class="eyebrow">03 · SHAPE THE CUT</p>
+              <h2 id="timeline-title">Selected moments</h2>
+            </div>
+            <div class="timeline-summary" aria-live="polite">
+              <span><strong id="selected-duration">00:00.0</strong> retained</span>
+              <span class="summary-divider">·</span>
+              <span><strong id="selected-cue-count">0</strong> cues</span>
+            </div>
+          </div>
+          <div class="timeline-card">
+            <div class="timeline-ruler" aria-hidden="true">
+              <span>00:00</span>
+              <span id="timeline-source-duration">00:00</span>
+            </div>
+            <div id="timeline-track" class="timeline-track" role="list" aria-label="Timeline cues">
+              <div id="timeline-playhead" class="timeline-playhead" aria-hidden="true"></div>
+            </div>
+            <div id="timeline-empty" class="timeline-empty">Selected cues will become your continuous timeline.</div>
+            <div class="timeline-legend">
+              <span><i class="legend-swatch legend-selected" aria-hidden="true"></i>Selected</span>
+              <span><i class="legend-swatch legend-muted" aria-hidden="true"></i>Available cue</span>
+              <span id="timeline-range-note">Source range —</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="controls-grid" aria-label="Cut controls">
+          <article class="control-card suggestion-card">
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow">04 · START WITH A THOUGHT</p>
+                <h2>Suggest a selection</h2>
+              </div>
+              <span class="card-index">◎</span>
+            </div>
+            <label class="field-label" for="goal-input">What should this cut keep?</label>
+            <div class="goal-row">
+              <input id="goal-input" class="text-input" type="text" placeholder="e.g. the turning point and the takeaway" />
+              <button id="keywords-button" class="button button-secondary" type="button" disabled>Keywords</button>
+            </div>
+            <div class="suggestion-actions">
+              <button id="jev-button" class="button button-lime" type="button" disabled>Jev suggestion <span class="demo-tag">demo only</span></button>
+              <span id="suggestion-status" class="inline-status" role="status" aria-live="polite"></span>
+            </div>
+            <label id="jev-consent-row" class="consent-control" for="jev-consent" hidden>
+              <input id="jev-consent" type="checkbox" disabled />
+              <span>Send subtitle text to TypeSafe. Video stays local.</span>
+            </label>
+            <div class="suggestion-meta">
+              <span id="suggestion-mode" class="mode-badge">Recorded demo guidance</span>
+              <p id="suggestion-detail" class="card-note">Keyword matching works on imported material. Jev suggestions are bundled demo guidance only.</p>
+            </div>
+          </article>
+
+          <article class="control-card padding-card">
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow">05 · LEAVE A LITTLE AIR</p>
+                <h2>Before &amp; after padding</h2>
+              </div>
+              <span id="padding-value" class="accent-value">±0.12s</span>
+            </div>
+            <label class="field-label" for="padding-range">Keep a little context around each selected cue.</label>
+            <input id="padding-range" class="range-input" type="range" min="0" max="1" step="0.01" value="0.12" />
+            <div class="range-labels"><span>0s</span><span>0.5s</span><span>1s</span></div>
+            <div class="duration-pair">
+              <div><span class="metric-label">Source</span><strong id="source-duration-card">00:00.0</strong></div>
+              <div><span class="metric-label">Retained</span><strong id="retained-duration-card">00:00.0</strong></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="export-section" aria-labelledby="export-title">
+          <div class="export-copy">
+            <p class="eyebrow">06 · MAKE IT REAL</p>
+            <h2 id="export-title">Export the signal</h2>
+            <p>Render only the moments you selected. The output keeps its video, audio, subtitle, and timeline files together.</p>
+          </div>
+          <div class="export-action">
+            <button id="export-button" class="button button-primary export-button" type="button" disabled>
+              Export selected moments <span aria-hidden="true">↗</span>
+            </button>
+            <p id="export-status" class="export-status" role="status" aria-live="polite">Select at least one cue to export.</p>
+          </div>
+        </section>
+
+        <section id="output-panel" class="output-panel" aria-labelledby="output-title" hidden>
+          <div class="output-heading">
+            <div>
+              <p class="eyebrow">OUTPUT</p>
+              <h2 id="output-title">Your cut is ready</h2>
+            </div>
+            <span id="output-meta" class="output-meta"></span>
+          </div>
+          <div class="output-grid">
+            <div class="output-video-shell">
+              <video id="output-video" controls preload="metadata" playsinline aria-label="Exported video preview"></video>
+            </div>
+            <div class="download-column">
+              <p class="download-intro">Download the edit or keep the supporting files for another pass.</p>
+              <div id="download-links" class="download-links"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>Cutroom <span id="app-version">0.1.0</span></span>
+        <span>Video stays on your computer</span>
+      </footer>
+    </div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

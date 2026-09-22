@@ -1,0 +1,29 @@
+1
+00:00:00,000 --> 00:00:07,200
+Welcome to the walkthrough. Today we will tour the reporting workspace
+and its daily routines.
+
+2
+00:00:07,200 --> 00:00:16,040
+A backup is exported every night. The scheduled job usually finishes
+before anyone starts work.
+
+3
+00:00:16,040 --> 00:00:24,680
+After yesterday's update, the reporting page went blank. The usual
+refresh did not bring it back.
+
+4
+00:00:24,680 --> 00:00:32,520
+We loaded the last healthy snapshot into a clean database, then
+switched the report to that copy.
+
+5
+00:00:32,520 --> 00:00:40,760
+Row counts matched the original source, and the missing charts
+appeared again. The totals agreed too.
+
+6
+00:00:40,760 --> 00:00:49,360
+Next month we plan to add a longer retention window and a notification
+when the nightly job finishes.

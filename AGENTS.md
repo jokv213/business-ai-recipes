@@ -1,5 +1,13 @@
 # Project Instructions
 
+## Cutroom (new interactive tool)
+
+`tools/cutroom/` is a standalone local video editor. Launch with `python3 tools/cutroom/server.py`; verify with `python3 -B -m unittest discover -s tools/cutroom -p 'test_*.py'`. Python 3.11 and FFmpeg/ffprobe are required; no Python packages. `media.py` owns parsing/timelines/rendering, `server.py` owns loopback HTTP/storage, `intelligence.py` owns optional TypeSafe calls, and HTML/CSS/JS owns editing and preview. `demo/` contains authored synthetic media and recorded decisions. Root README features Cutroom; `RECIPES.md` preserves the earlier recipe documentation.
+
+User-selected video and subtitle files may be processed locally. Default startup is offline; recorded answers are labelled recorded. Only a user-provided `TYPESAFE_API_KEY` together with `--enable-jev` and in-app consent enables subtitle/goal transmission to the fixed TypeSafe endpoint. Never transmit video, read Keychain from this public tool, retry unknown API requests, log keys/provider bodies, or send without consent. Cap new requests to 30 per launch and preserve editable suggestions. Agent verification uses synthetic inputs only. Preserve Host/Origin checks, container/protocol restrictions, and filesystem scope. There is no external business-write path.
+
+The narrower restrictions below refer to the earlier recipes and remain unchanged for them. Never expand their live scope while editing Cutroom. `.cutroom/` is ignored workspace output; never commit imported files. Tracked assets must remain authored synthetic content. Public verification includes the exact file manifest and an independent fresh-checkout test.
+
 ## Purpose
 
 This repository contains small, reproducible business AI recipes. The meeting recipe turns a synthetic transcript into evidence-linked task candidates and requires a separate review input before a temporary local SQLite apply. The CSV recipe reconciles synthetic rows and checks that report prose matches calculated metrics. The Jev recipes replay recorded synthetic Choice fixtures and abstain to `review` when their provisional gates are not met. The CSV exception recipe classifies only value-free synthetic explanations; Python remains the owner of all CSV metrics and findings.

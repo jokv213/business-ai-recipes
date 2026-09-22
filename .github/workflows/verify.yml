@@ -15,7 +15,7 @@ concurrency:
 jobs:
   recipe:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     strategy:
       matrix:
         python-version: ['3.11', '3.12']
@@ -28,6 +28,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Verify boundaries and deterministic behavior
         run: python -B verify.py
+      - name: Install video tools
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Verify Cutroom media and local HTTP workflow
+        run: python3 -B -m unittest discover -s tools/cutroom -p 'test_*.py' -v
       - name: Run the repeat-safe local demonstration
         run: python -B run_demo.py
       - name: Run the offline Jev meeting-line candidate

@@ -1,0 +1,102 @@
+{
+  "goal": "Keep the explanation of how the backup was restored and checked. Skip setup and future plans.",
+  "model": "jev-1.13.0",
+  "fingerprint": "be734bb090f52ae26f741cdaa25ab17636e7c55a37aec266aca20a15808de1b8",
+  "result": {
+    "selected_ids": [
+      "cue-0004",
+      "cue-0005"
+    ],
+    "judgments": [
+      {
+        "id": "cue-0001",
+        "choice": "skip",
+        "probabilities": {
+          "keep": 0.0,
+          "skip": 1.0
+        },
+        "confidence": 1.0,
+        "input_tokens": 462,
+        "elapsed_ms": 654.53,
+        "observed_at": "2026-09-22T18:06:10+09:00"
+      },
+      {
+        "id": "cue-0002",
+        "choice": "skip",
+        "probabilities": {
+          "skip": 0.99,
+          "keep": 0.01
+        },
+        "confidence": 0.99,
+        "input_tokens": 483,
+        "elapsed_ms": 606.7,
+        "observed_at": "2026-09-22T18:06:10+09:00"
+      },
+      {
+        "id": "cue-0003",
+        "choice": "skip",
+        "probabilities": {
+          "skip": 0.99,
+          "keep": 0.01
+        },
+        "confidence": 0.98,
+        "input_tokens": 487,
+        "elapsed_ms": 627.59,
+        "observed_at": "2026-09-22T18:06:11+09:00"
+      },
+      {
+        "id": "cue-0004",
+        "choice": "keep",
+        "probabilities": {
+          "keep": 0.98,
+          "skip": 0.02
+        },
+        "confidence": 0.96,
+        "input_tokens": 490,
+        "elapsed_ms": 616.29,
+        "observed_at": "2026-09-22T18:06:12+09:00"
+      },
+      {
+        "id": "cue-0005",
+        "choice": "keep",
+        "probabilities": {
+          "skip": 0.01,
+          "keep": 0.99
+        },
+        "confidence": 0.97,
+        "input_tokens": 489,
+        "elapsed_ms": 750.14,
+        "observed_at": "2026-09-22T18:06:12+09:00"
+      },
+      {
+        "id": "cue-0006",
+        "choice": "skip",
+        "probabilities": {
+          "keep": 0.0,
+          "skip": 1.0
+        },
+        "confidence": 1.0,
+        "input_tokens": 467,
+        "elapsed_ms": 588.86,
+        "observed_at": "2026-09-22T18:06:13+09:00"
+      }
+    ],
+    "mode": "live",
+    "measurement": {
+      "new_requests": 6,
+      "cached_decisions": 0,
+      "input_tokens": 2878,
+      "call_ms": 3844.11
+    },
+    "note": "Synthetic six-cue exploration, not a general accuracy claim."
+  },
+  "synthetic": true,
+  "expected_ids_frozen_before_live": [
+    "cue-0004",
+    "cue-0005"
+  ],
+  "literal_keyword_baseline": {
+    "query": "restore check",
+    "selected_ids": []
+  }
+}
