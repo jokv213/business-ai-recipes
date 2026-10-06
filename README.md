@@ -2,6 +2,14 @@
 
 [![Verify](https://github.com/jokv213/business-ai-recipes/actions/workflows/verify.yml/badge.svg)](https://github.com/jokv213/business-ai-recipes/actions/workflows/verify.yml)
 
+## Start with one working path
+
+Choose the shortest route for what you want to try:
+
+- **Make a shareable demo from a running localhost app:** [Demo Forge guide](experiments/demo-forge/README.md) — bring a URL and operation JSON, then export a checked MP4/GIF/cover.
+- **Inspect evidence and replay your own input:** [Dots Studio guide](tools/dots-studio/README.md).
+- **Turn your own schema into editable plugin source:** [App Forge guide](tools/app-forge/README.md).
+
 ## Dots Studio — make assumptions, evidence and failed runs inspectable
 
 Four interactive MCP App workbenches: **Scenario Lab**, **Evidence Canvas**,
